@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
 }
 
 ParseResult initialize_options(int argc, char** argv) {
-  Options options = Options("hexdump", "A simple hexdump utility");
+  Options options = Options(argv[0], "A simple hexdump utility");
 
   options
       .positional_help("<filename>")
