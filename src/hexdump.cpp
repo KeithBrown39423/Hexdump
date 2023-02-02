@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
   ParseResult result = initialize_options(argc, argv);
   const string filename = result["file"].as<string>();
 
-  std::ifstream input_stream = std::ifstream();
+  std::basic_ifstream<unsigned char> input_stream = std::basic_ifstream<unsigned char>();
 
   input_stream.open(filename, std::ios::binary);
 
@@ -43,9 +43,10 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
 
-  char *file_content = (char *)malloc(file_size);
+  unsigned char *file_content = (unsigned char *)malloc(file_size);
   input_stream.read(file_content, file_size);
   input_stream.close();
+
 
   bool output_color = true;
   if (result.count("output") || result.count("no-color")) output_color = false;
