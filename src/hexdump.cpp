@@ -22,12 +22,12 @@ int main(int argc, char** argv) {
   ParseResult result = initialize_options(argc, argv);
   const string filename = result["file"].as<string>();
 
-  std::basic_ifstream<unsigned char> input_stream = std::basic_ifstream<unsigned char>();
-
-  input_stream.open(filename, std::ios::binary);
+  std::ifstream input_stream;
+  input_stream.open(filename, std::ios::binary | std::ios::in);
 
   if (!input_stream.is_open()) {
     cerr << ERROR_HEADER << "Could not open file '" << filename << "'" << endl;
+    input_stream.clear();
     return EXIT_FAILURE;
   }
 
@@ -43,10 +43,10 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
 
-  unsigned char *file_content = (unsigned char *)malloc(file_size);
-  input_stream.read(file_content, file_size);
+  char *buffer = (char *)malloc(file_size);
+  input_stream.read(buffer, file_size);
   input_stream.close();
-
+  unsigned char *file_content = (unsigned char *)buffer;
 
   bool output_color = true;
   if (result.count("output") || result.count("no-color")) output_color = false;
