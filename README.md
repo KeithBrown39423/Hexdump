@@ -1,3 +1,5 @@
+![Banner](https://raw.githubusercontent.com/keithbrown39423/hexdump/master/assets/Banner.png)
+
 <h1 style="text-align: center">Hexdump</h1>
 
 <h4 style="text-align: center; padding: 0 0 10px 0">
