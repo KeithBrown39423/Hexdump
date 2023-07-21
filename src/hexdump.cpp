@@ -1,157 +1,191 @@
+#include <hexdump_errno.h>
+
 #include <cxxopts.hpp>
+#include <filesystem>
+#include <iterator>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
+#include <string>
+#include <vector>
 
 using namespace cxxopts;
 
-using std::cerr;
-using std::cout;
-using std::endl;
 using std::string;
 
-#define MAX_FILE_SIZE 0xFFFF
-#define ERROR_HEADER "\x1b[1;31mError: \x1b[0m"
+const string hexdump_version = "v1.1.0";
+const unsigned int max_file_size = 0xFFFFFFFF;
 
-const string HEXDUMP_VERSION = "v1.0.0";
+const string error_header = "\x1b[1;38;2;255;0;0mError: \x1b[0m";
+
+string ansi_reset = "\x1b[0m";
+string offset_color = "\x1b[38;2;0;144;255m";
+string ascii_color = "\x1b[38;2;0;144;48m";
+
+bool output_color = true;
 
 ParseResult initialize_options(int argc, char** argv);
-string int_to_hex(int i, int len);
+string int_to_hex(int value, int width);
+void outputHexLine(std::ostream& output, std::vector<unsigned char> buffer, size_t offset, size_t size, int ascii);
+void outputHeader(std::ostream& output, int ascii);
 
 int main(int argc, char** argv) {
-  ParseResult result = initialize_options(argc, argv);
-  const string filename = result["file"].as<string>();
+    ParseResult result = initialize_options(argc, argv);
+    const string filename = result["filename"].as<string>();
 
-  std::ifstream input_stream;
-  input_stream.open(filename, std::ios::binary | std::ios::in);
+    std::ifstream input_stream;
+    input_stream.open(filename, std::ios::binary | std::ios::in);
 
-  if (!input_stream.is_open()) {
-    cerr << ERROR_HEADER << "Could not open file '" << filename << "'" << endl;
-    input_stream.clear();
-    return EXIT_FAILURE;
-  }
-
-  input_stream.seekg(0, input_stream.end);
-  const size_t file_size = input_stream.tellg();
-  input_stream.seekg(0, input_stream.beg);
-
-  if (file_size > MAX_FILE_SIZE) {
-    cerr << ERROR_HEADER << "File is too big" << file_size << endl;
-    exit(EXIT_FAILURE);
-  } else if (file_size == 0) {
-    cout << ERROR_HEADER << "File is empty" << endl;
-    exit(EXIT_FAILURE);
-  }
-
-  char *buffer = (char *)malloc(file_size);
-  input_stream.read(buffer, file_size);
-  input_stream.close();
-  unsigned char *file_content = (unsigned char *)buffer;
-
-  bool output_color = true;
-  if (result.count("output") || result.count("no-color")) output_color = false;
-
-  if (result.count("output-color")) output_color = true;
-
-  const string ansi_reset = !output_color ? "" : "\x1b[0m";
-  const string offset_color = !output_color ? "" : "\x1b[38;2;0;144;255m";
-  const string ascii_color = !output_color ? "" : "\x1b[38;2;0;144;48m";
-
-  std::stringstream output = std::stringstream();
-
-  output << offset_color << "  Offset: 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F"
-         << endl << ansi_reset;
-
-  for (size_t i = 0; i < (((file_size - 1) / 16) + 1); i++) {
-    output << offset_color << "    " << int_to_hex(i * 16, 4) << ": " << ansi_reset;
-    for (int j = 0; j < 16; j++) {
-      if (i * 16 + j < file_size) {
-        output << int_to_hex(file_content[i * 16 + j], 2) << " ";
-      } else {
-        output << "   ";
-      }
+    if (!input_stream.is_open()) {
+        std::cerr << error_header << "Could not open file '" << filename << "'" << std::endl;
+        return EIO;
     }
 
-    if (result.count("ascii")) {
-      output << "   " << ascii_color;
+    input_stream.seekg(0, input_stream.end);
+    const size_t file_size = input_stream.tellg();
+    input_stream.seekg(0, input_stream.beg);
 
-      char c;
-      for (size_t k = 0; k < 16; k++) {
-        if ((size_t)(i * 16 + k) < file_size) {
-          c = file_content[i * 16 + k];
-          if (c < 33 || c > 126) {
-            output << ".";
-          } else {
-            output << c;
-          }
-        }
-      }
+    if (file_size > max_file_size) {
+        std::cerr << "Error: File is too big" << std::endl;
+        return HEX_EFBIG;
+    } else if (file_size == 0) {
+        std::cerr << "Error: File is empty" << std::endl;
+        return HEX_EFEMPTY;
     }
 
-    output << ansi_reset << endl;
-  }
+    // TODO: Fix ISO C++ forbids variable length array when using file_size
+    std::istream_iterator<unsigned char> start(input_stream), end;
+    std::vector<unsigned char> buffer(start, end);
 
-  if (result.count("output")) {
-    string output_file = result["output"].as<string>();
+    if (!output_color) {
+        ansi_reset = "";
+        offset_color = "";
+        ascii_color = "";
+    }
 
-    std::ofstream output_stream = std::ofstream();
-    output_stream.open(output_file, std::ios::binary);
-    output_stream << output.str() << endl;
-    output_stream.close();
-  } else {
-    cout << output.str() << endl;
-  };
+    std::stringstream output = std::stringstream();
 
-  return 0;
+    outputHeader(output, result.count("ascii"));
+
+    for (size_t i = 0; i < file_size; i += 16) {
+        outputHexLine(output, buffer, i, file_size, result.count("ascii"));
+    }
+
+    if (file_size / 16 > 8) 
+        outputHeader(output, result.count("ascii"));
+
+    if (result.count("output")) {
+        const string output_filename = result["output"].as<string>();
+        std::ofstream output_stream;
+        output_stream.open(output_filename, std::ios::out);
+        output_stream << output.str() << std::endl;
+        output_stream.close();
+
+        std::cout << "Wrote output to " << output_filename << std::endl;
+    } else {
+        std::cout << output.str() << std::endl;
+    }
+
+    return 0;
 }
 
 ParseResult initialize_options(int argc, char** argv) {
-  Options options = Options(argv[0], "A simple hexdump utility");
+    Options options(
+        std::filesystem::path{argv[0]}.filename(),
+        "A simple hexdump utility\n"
+    );
 
-  options
-      .positional_help("<filename>")
-      .show_positional_help()
-      .set_width(80)
-      .set_tab_expansion()
-      .allow_unrecognised_options()
-      .add_options()
-        ("h,help", "Display help message and exit")
-        ("v,version", "Display program information and exit")
-        ("a,ascii", "Display ascii equivalent")
-        ("o,output", "Print to OUTPUT instead of stdout", value<string>(), "OUTPUT")
-        ("output-color", "Write color escape codes to output files")
-        ("no-color", "Disable color output")
-        ("file", "File to dump hex content of", value<string>(), "FILE");
+    options.positional_help("<filename>")
+        .show_positional_help()
+        .set_width(80)
+        .set_tab_expansion()
+        .allow_unrecognised_options()
+        .add_options()
+            ("h,help", "Display help message and exit")
+            ("v,version", "Display program information and exit")
+            ("a,ascii", "Display ascii equivalent")
+            ("o,output", "Print to OUTPUT instead of stdout", value<string>(), "OUTPUT")
+            ("output-color", "Write color escape codes. Default: true", value<string>(), "true/false")
+            ("filename", "File to be dumped", value<string>(), "filename");
 
-  options.parse_positional({"file"});
+    options.parse_positional({"filename"});
 
-  ParseResult result = options.parse(argc, argv);
+    ParseResult result = options.parse(argc, argv);
 
-  if (result.count("help")) {
-    cout << options.help() << endl;
-    exit(0);
-  }
+    if (result.count("help")) {
+        std::cout << options.help() << std::endl;
+        exit(EXIT_SUCCESS);
+    }
 
-  if (result.count("version")) {
-    cout << HEXDUMP_VERSION << endl;
-    exit(0);
-  }
+    if (result.count("version")) {
+        std::cout << "Hexdump " << hexdump_version << std::endl;
+        exit(EXIT_SUCCESS);
+    }
 
-  if (!result.count("file")) {
-    cerr << ERROR_HEADER << "No file specified" << endl
-         << endl
-         << "Usage: hexdump [option]... [file]" << endl
-         << "Try 'hexdump --help' for more information." << endl;
+    if (!result.count("filename")) {
+        std::cout << error_header << "No file specified\n"
+         << "\n"
+         << "Usage: hexdump [option]... [file]\n"
+         << "Try 'hexdump --help' for more information." << std::endl;
+        exit(HEX_EMISARG);
+    }
 
-    exit(EXIT_FAILURE);
-  }
+    if ((result.count("output-color") &&
+        result["output-color"].as<string>() == "false") ||
+        result.count("output")
+    ) {
+        output_color = false;
+    }
 
-  return result;
+    if ((result.count("output-color") &&
+        result["output-color"].as<string>() == "true")
+    ) {
+        output_color = true;
+    }
+
+    return result;
 }
 
-string int_to_hex(int i, int len) {
-  std::stringstream stream;
-  stream << std::setfill('0') << std::setw(len)
-         << std::hex << std::uppercase << i;
-  return stream.str();
+string int_to_hex(int value, int width) {
+    std::stringstream stream = std::stringstream();
+    stream << std::hex << std::uppercase << std::setfill('0') << std::setw(width) << value;
+    return stream.str();
+}
+
+void outputHexLine(std::ostream& output, std::vector<unsigned char> buffer, size_t offset, size_t size, int ascii) {
+    const int bytes_per_line = 16;
+    output << offset_color << int_to_hex(offset, 8) << ": " << ansi_reset;
+    for (size_t i = 0; i < bytes_per_line; i++) {
+        if (offset + i < size) {
+            output << int_to_hex(buffer[offset + i], 2) << " ";
+        } else {
+            output << "   ";
+        }
+    }
+    output << " ";
+    if (!ascii) {
+        output << ansi_reset << "\n";
+        return;
+    }
+    for (size_t i = 0; i < bytes_per_line; i++) {
+        output << ascii_color;
+        if (offset + i > size - 1) {
+            output << " ";
+            continue;
+        };
+        if (buffer[offset + i] <= 32 || buffer[offset + i] >= 126) {
+            output << ".";
+            continue;
+        }
+        output << buffer[offset + i];
+    }
+    output << ansi_reset << "\n";
+}
+
+void outputHeader(std::ostream& output, int ascii) {
+    output << offset_color
+           << "  Offset: 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F  ";
+    if (ascii) {
+        output << "0123456789ABCDEF";
+    }
+    output << ansi_reset << "\n";
 }
