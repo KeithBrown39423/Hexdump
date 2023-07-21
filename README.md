@@ -1,4 +1,8 @@
-![Banner](./assets/banner.png)
+<div align="center">
+  <br /><br />
+  <img src="./assets/banner.png" alt="Banner" />
+  <br /><br />
+</div>
 
 <div id="user-content-toc" align="center">
   <ul>
@@ -21,34 +25,51 @@
   <a href="#license">License</a>
 </p>
 
-<br /><br />
-![Screenshot](./assets/screenshot.png)
+<div align="center">
+  <br /><br />
+  <img src="./assets/screenshot.png" alt="Screenshot" />
+</div>
 
 ## Key Features
 
+* ASCII sidebar
 * Colored output
   * Option to remove color
-* ASCII sidebar
 * Output to file
   * With or without color
 
 ## How To Use
-To use this command, download the binary from the [release](releases/tag/v5.0.0) page.
+To use this command, download the binary from the [release](releases/tag/v1.1.0) page.
 After downloading, simply move the binary into one of the following folders
 
-### Linux / MacOS:
+### Linux\:
 `/usr/bin/`
-> Note (Linux only): This *is* made to replace the standard Hexdump command.
+> Note: This *is* made to replace the standard Hexdump command.
 > If you feel uncomfortable replacing it, simply rename the binary to something else.
 
 ### Windows:
-`C:/Program Files/Hexdump/`
+Although hexdump is compatible with Windows, there is no compiled binary for it.
+You will have to compile it yourself using one of the following commands:
+```bash
+make build
+# or
+g++ -Wall -Werror -Wpedantic -O3 -I lib -I include src/hexdump.cpp -o bin/hexdump
+```
+After compiling, move the binary into `C:/Program Files/Hexdump/`
 > Note: Don't forget to add `C:/Program Files/Hexdump/` to your PATH.
 
 ## Credits
+### Libraries
 This software uses the following open source library:
 
-* [cxxopts](https://github.com/jarro2783/cxxopts)
+* [cxxopts (v3.1.1)](https://github.com/jarro2783/cxxopts/tree/v3.1.1)
+
+### Contributors
+Thank you to all the people who have contributed to this project:
+<br /><br />
+<a href="https://github.com/KeithBrown39423/Hexdump/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=KeithBrown39423/Hexdump"/>
+</a>
 
 ## License
 [MIT](blob/main/LICENSE)
