@@ -4,7 +4,10 @@
   <br /><br />
 </div>
 
-----
+<div id="user-content-toc" align="center">
+  <ul>
+    <summary><h1 style="display: inline-block;">Hexdump</h1></summary>
+  </ul>
 
 <div id="user-content-toc" align="center">
   <ul>
