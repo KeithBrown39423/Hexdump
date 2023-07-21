@@ -26,14 +26,12 @@ bool output_color = true;
 ParseResult initialize_options(int argc, char** argv);
 string int_to_hex(int value, int width);
 void outputHexLine(std::ostream& output, std::vector<unsigned char> buffer, size_t offset, size_t size, int ascii);
-void outputHeader(std::ostream& output, int ascii);
 
 int main(int argc, char** argv) {
     ParseResult result = initialize_options(argc, argv);
     const string filename = result["filename"].as<string>();
 
-    std::ifstream input_stream;
-    input_stream.open(filename, std::ios::binary | std::ios::in);
+    std::ifstream input_stream(filename, std::ios::binary | std::ios::in);
 
     if (!input_stream.is_open()) {
         std::cerr << error_header << "Could not open file '" << filename << "'" << std::endl;
@@ -52,9 +50,11 @@ int main(int argc, char** argv) {
         return HEX_EFEMPTY;
     }
 
-    // TODO: Fix ISO C++ forbids variable length array when using file_size
-    std::istream_iterator<unsigned char> start(input_stream), end;
-    std::vector<unsigned char> buffer(start, end);
+    std::vector<unsigned char> buffer;
+    unsigned char byte;
+    while (input_stream >> std::noskipws >> byte) {
+        buffer.push_back(byte);
+    }
 
     if (!output_color) {
         ansi_reset = "";
@@ -63,15 +63,17 @@ int main(int argc, char** argv) {
     }
 
     std::stringstream output = std::stringstream();
-
-    outputHeader(output, result.count("ascii"));
+    
+    output << offset_color
+           << "  Offset: 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F  ";
+    if (result.count("ascii")) {
+        output << "0123456789ABCDEF";
+    }
+    output << ansi_reset << "\n";
 
     for (size_t i = 0; i < file_size; i += 16) {
         outputHexLine(output, buffer, i, file_size, result.count("ascii"));
     }
-
-    if (file_size / 16 > 8) 
-        outputHeader(output, result.count("ascii"));
 
     if (result.count("output")) {
         const string output_filename = result["output"].as<string>();
@@ -177,15 +179,6 @@ void outputHexLine(std::ostream& output, std::vector<unsigned char> buffer, size
             continue;
         }
         output << buffer[offset + i];
-    }
-    output << ansi_reset << "\n";
-}
-
-void outputHeader(std::ostream& output, int ascii) {
-    output << offset_color
-           << "  Offset: 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F  ";
-    if (ascii) {
-        output << "0123456789ABCDEF";
     }
     output << ansi_reset << "\n";
 }
