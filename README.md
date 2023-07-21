@@ -1,28 +1,28 @@
-![Banner](https://raw.githubusercontent.com/keithbrown39423/hexdump/master/assets/Banner.png)
+![Banner](./assets/banner.png)
 
-<h1 style="text-align: center">Hexdump</h1>
+<div id="user-content-toc" align="center">
+  <ul>
+    <summary><h1 style="display: inline-block;">Hexdump</h1></summary>
+  </ul>
 
-<h4 style="text-align: center; padding: 0 0 10px 0">
-  A simple hexdump utility with some basic features.
-</h4>
+  <p>
+    <i>the <b>alternative</b></i> cross platfrom hex dumping utility
+    <br />
+    <a href="https://github.com/KeithBrown39423/Hexdump/issues"><b>Report Bug</b></a>
+    ·
+    <a href="https://github.com/KeithBrown39423/Hexdump/issues"><b>Request Feature</b></a>
+  </p>
+</div>
 
-<p style="text-align: center">
-  <a href="blob/main/LICENSE">
-    <img alt="GitHub License" src="https://img.shields.io/github/license/keithbrown39423/hexdump?color=orange">
-  </a>
-  <a href="releases">
-    <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/keithbrown39423/hexdump">
-  </a>
-</p>
-
-<p style="text-align: center">
-  <a href="#key-features">Key Features</a> •
-  <a href="#how-to-use">How To Use</a> •
-  <a href="#credits">Credits</a> •
+<p align="center">
+  <a href="#key-features">Key Features</a> ·
+  <a href="#how-to-use">How To Use</a> ·
+  <a href="#credits">Credits</a> ·
   <a href="#license">License</a>
 </p>
 
-![Screenshot](https://raw.githubusercontent.com/keithbrown39423/hexdump/master/assets/screenshot.png)
+<br /><br />
+![Screenshot](./assets/screenshot.png)
 
 ## Key Features
 
