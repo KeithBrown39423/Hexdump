@@ -16,7 +16,7 @@
     <br />
     <a href="https://github.com/KeithBrown39423/Hexdump/issues"><b>Report Bug</b></a>
     ·
-    <a href="https://github.com/KeithBrown39423/Hexdump/issues"><b>Request Feature</b></a>
+    <a href="https://github.com/KeithBrown39423/Hexdump/issues/new?assignees=KeithBrown39423&labels=enhancement&projects=&template=feature-suggestion.md&title=%5BFeature%5D+%3CTITLE+HERE%3E"><b>Request Feature</b></a>
   </p>
 </div>
 
@@ -55,8 +55,8 @@
 Download the binary from the [release](https://github.com/KeithBrown39423/Hexdump/releases/) page. 
 
 Place the Hexdump binary into: 
-* `/bin/etc` ~ For system-wide access (requires administrator privileges)
-* `~/bin` ~ For local access restricted to your user account (create the folder if it doesn't exist)
+* `/usr/bin` ~ For system-wide access (requires administrator privileges)
+* `~/.local/bin` ~ For local access restricted to your user account (create the folder if it doesn't exist)
 
 <br /><br />
 
