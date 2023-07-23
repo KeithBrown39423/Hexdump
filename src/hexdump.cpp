@@ -2,11 +2,16 @@
 
 #include <cxxopts.hpp>
 #include <filesystem>
-#include <iterator>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <string>
 #include <vector>
+
+// Check windows
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 using namespace cxxopts;
 
@@ -15,13 +20,11 @@ using std::string;
 const string hexdump_version = "v1.1.0";
 const unsigned int max_file_size = 0xFFFFFFFF;
 
-const string error_header = "\x1b[1;38;2;255;0;0mError: \x1b[0m";
+string error_header = "\x1b[1;38;2;255;0;0mError: \x1b[0m";
 
 string ansi_reset = "\x1b[0m";
 string offset_color = "\x1b[38;2;0;144;255m";
 string ascii_color = "\x1b[38;2;0;144;48m";
-
-bool output_color = true;
 
 ParseResult initialize_options(int argc, char** argv);
 string int_to_hex(int value, int width);
@@ -30,6 +33,11 @@ void outputHexLine(std::ostream& output, std::vector<unsigned char> buffer, size
 int main(int argc, char** argv) {
     ParseResult result = initialize_options(argc, argv);
     const string filename = result["file"].as<string>();
+
+    if (!std::filesystem::exists(filename)) {
+        std::cerr << error_header << "File '" << filename << "' does not exist" << std::endl;
+        return HEX_ENOENT;
+    }
 
     std::ifstream input_stream(filename, std::ios::binary | std::ios::in);
 
@@ -44,7 +52,7 @@ int main(int argc, char** argv) {
 
     if (file_size > max_file_size) {
         std::cerr << error_header << "File is too big" << std::endl;
-        return HEX_EFBIG; 
+        return HEX_EFBIG;
     } else if (file_size == 0) {
         std::cerr << error_header << "File is empty" << std::endl;
         return HEX_EFEMPTY;
@@ -56,14 +64,8 @@ int main(int argc, char** argv) {
         buffer.push_back(byte);
     }
 
-    if (!output_color) {
-        ansi_reset = "";
-        offset_color = "";
-        ascii_color = "";
-    }
-
     std::stringstream output = std::stringstream();
-    
+
     output << offset_color
            << "  Offset: 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F  ";
     if (result.count("ascii")) {
@@ -122,26 +124,38 @@ ParseResult initialize_options(int argc, char** argv) {
         std::cout << "Hexdump " << hexdump_version << std::endl;
         exit(EXIT_SUCCESS);
     }
+    if ((result.count("output-color") &&
+         result["output-color"].as<string>() == "false") ||
+        (result.count("output") && !(result.count("output-color") &&
+                                     result["output-color"].as<string>() == "true"))) {
+        ansi_reset = "";
+        offset_color = "";
+        ascii_color = "";
+        error_header = "Error: ";
+    }
+#ifdef _WIN32
+    else {
+        DWORD dwMode = 0;
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        GetConsoleMode(hConsole, &dwMode);
+        DWORD dwNewMode = dwMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        SetConsoleMode(hConsole, dwMode);
+
+        if (dwMode == dwNewMode) {
+            std::cout << "Enabled VT100 escape codes" << std::endl;
+        } else {
+            std::cout << "Failed to enable VT100 escape codes" << std::endl;
+            exit(128);
+        }
+    }
+#endif
 
     if (!result.count("file")) {
         std::cout << error_header << "No file specified\n"
-         << "\n"
-         << "Usage: " << binary_name << " [options...] <file>\n"
-         << "Try `" << binary_name << " --help` for more information." << std::endl;
+                  << "\n"
+                  << "Usage: " << binary_name << " [options...] <file>\n"
+                  << "Try `" << binary_name << " --help` for more information." << std::endl;
         exit(HEX_EMISARG);
-    }
-
-    if ((result.count("output-color") &&
-        result["output-color"].as<string>() == "false") ||
-        result.count("output")
-    ) {
-        output_color = false;
-    }
-
-    if ((result.count("output-color") &&
-        result["output-color"].as<string>() == "true")
-    ) {
-        output_color = true;
     }
 
     return result;
