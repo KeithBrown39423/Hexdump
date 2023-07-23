@@ -109,7 +109,7 @@ ParseResult initialize_options(int argc, char** argv) {
             ("o,output", "Print to OUTPUT instead of stdout", value<string>(), "OUTPUT")
             ("output-color", "Write color escape codes", value<string>()->default_value("true"), "true|false")
             ("file", "File to be dumped", value<string>(), "filename");
-    
+
     options.parse_positional({"file"});
 
     ParseResult result = options.parse(argc, argv);
@@ -127,8 +127,8 @@ ParseResult initialize_options(int argc, char** argv) {
     if (!result.count("filename")) {
         std::cout << error_header << "No file specified\n"
          << "\n"
-         << "Usage: hexdump [option]... [file]\n"
-         << "Try 'hexdump --help' for more information." << std::endl;
+         << "Usage: hexdump [options...] <file>\n"
+         << "Try `hexdump --help` for more information." << std::endl;
         exit(HEX_EMISARG);
     }
 
