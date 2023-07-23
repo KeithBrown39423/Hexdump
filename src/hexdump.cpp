@@ -160,10 +160,13 @@ ParseResult initialize_options(int argc, char** argv) {
         GetConsoleMode(hConsole, &dwMode);
 
         if (dwMode == dwNewMode) {
-            log("Enabled VT100 escape codes", LOG_INFO)
+            log("Enabled VT100 escape codes", LOG_INFO);
         } else {
             log("Failed to enable VT100 escape codes", LOG_WARN);
-            exit(128);
+            ansi_reset = "";
+            offset_color = "";
+            ascii_color = "";
+            error_header = "Error: ";
         }
     }
 #endif
@@ -231,7 +234,7 @@ string timestamp() {
 void log(string message, log_level level, bool output) {
     string home_directory;
 #ifdef _WIN32
-    home_directory = std::getenv("HOMEDRIVE") + std::getenv("HOMEPATH");
+    home_directory = string(std::getenv("HOMEDRIVE")) + string(std::getenv("HOMEPATH"));
 #else
     home_directory = std::getenv("HOME");
 #endif
