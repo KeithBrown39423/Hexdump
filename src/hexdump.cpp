@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
 
     if (!input_stream.is_open()) {
         std::cerr << error_header << "Could not open file '" << filename << "'" << std::endl;
-        return EIO;
+        return HEX_EIO;
     }
 
     input_stream.seekg(0, input_stream.end);
