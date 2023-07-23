@@ -43,10 +43,10 @@ int main(int argc, char** argv) {
     input_stream.seekg(0, input_stream.beg);
 
     if (file_size > max_file_size) {
-        std::cerr << "Error: File is too big" << std::endl;
-        return HEX_EFBIG;
+        std::cerr << error_header << "File is too big" << std::endl;
+        return HEX_EFBIG; 
     } else if (file_size == 0) {
-        std::cerr << "Error: File is empty" << std::endl;
+        std::cerr << error_header << "File is empty" << std::endl;
         return HEX_EFEMPTY;
     }
 
@@ -91,10 +91,9 @@ int main(int argc, char** argv) {
 }
 
 ParseResult initialize_options(int argc, char** argv) {
-    Options options(
-        std::filesystem::path{argv[0]}.filename(),
-        "A simple hexdump utility\n"
-    );
+    string binary_name = std::filesystem::path(argv[0]).filename().string();
+
+    Options options(binary_name, "A simple hexdump utility\n");
 
     options.custom_help("[options...]")
         .positional_help("<file>")
@@ -127,8 +126,8 @@ ParseResult initialize_options(int argc, char** argv) {
     if (!result.count("filename")) {
         std::cout << error_header << "No file specified\n"
          << "\n"
-         << "Usage: hexdump [options...] <file>\n"
-         << "Try `hexdump --help` for more information." << std::endl;
+         << "Usage: " << binary_name << " [options...] <file>\n"
+         << "Try `" << binary_name << " --help` for more information." << std::endl;
         exit(HEX_EMISARG);
     }
 
