@@ -1,5 +1,7 @@
 CXX := g++
+
 SRCDIR := src
+BINDIR := bin
 
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
@@ -8,7 +10,7 @@ INC := -I lib -I include
 
 build:
 	mkdir -p bin
-	$(CXX) $(CXXFLAGS) $(INC) $(SOURCES) -o bin/hexdump
+	$(CXX) $(CXXFLAGS) $(INC) $(SOURCES) -o $(BINDIR)/hexdump
 
 .PHONY: clean
 clean:
