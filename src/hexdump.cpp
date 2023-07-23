@@ -29,7 +29,7 @@ void outputHexLine(std::ostream& output, std::vector<unsigned char> buffer, size
 
 int main(int argc, char** argv) {
     ParseResult result = initialize_options(argc, argv);
-    const string filename = result["filename"].as<string>();
+    const string filename = result["file"].as<string>();
 
     std::ifstream input_stream(filename, std::ios::binary | std::ios::in);
 
@@ -123,7 +123,7 @@ ParseResult initialize_options(int argc, char** argv) {
         exit(EXIT_SUCCESS);
     }
 
-    if (!result.count("filename")) {
+    if (!result.count("file")) {
         std::cout << error_header << "No file specified\n"
          << "\n"
          << "Usage: " << binary_name << " [options...] <file>\n"
