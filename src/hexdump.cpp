@@ -139,7 +139,8 @@ ParseResult initialize_options(int argc, char** argv) {
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
         GetConsoleMode(hConsole, &dwMode);
         DWORD dwNewMode = dwMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        SetConsoleMode(hConsole, dwMode);
+        SetConsoleMode(hConsole, dwNewMode);
+        GetConsoleMode(hConsole, &dwMode)
 
         if (dwMode == dwNewMode) {
             std::cout << "Enabled VT100 escape codes" << std::endl;
