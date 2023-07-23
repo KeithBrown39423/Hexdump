@@ -96,7 +96,8 @@ ParseResult initialize_options(int argc, char** argv) {
         "A simple hexdump utility\n"
     );
 
-    options.positional_help("<filename>")
+    options.custom_help("[options...]")
+        .positional_help("<file>")
         .show_positional_help()
         .set_width(80)
         .set_tab_expansion()
@@ -106,10 +107,10 @@ ParseResult initialize_options(int argc, char** argv) {
             ("v,version", "Display program information and exit")
             ("a,ascii", "Display ascii equivalent")
             ("o,output", "Print to OUTPUT instead of stdout", value<string>(), "OUTPUT")
-            ("output-color", "Write color escape codes. Default: true", value<string>(), "true/false")
-            ("filename", "File to be dumped", value<string>(), "filename");
-
-    options.parse_positional({"filename"});
+            ("output-color", "Write color escape codes", value<string>()->default_value("true"), "true|false")
+            ("file", "File to be dumped", value<string>(), "filename");
+    
+    options.parse_positional({"file"});
 
     ParseResult result = options.parse(argc, argv);
 

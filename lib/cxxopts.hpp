@@ -2013,7 +2013,8 @@ class OptionAdder
 };
 
 namespace {
-constexpr std::size_t OPTION_LONGEST = 30;
+// constexpr std::size_t OPTION_LONGEST = 30;
+constexpr std::size_t OPTION_LONGEST = 48; // Adapated from original to allow longer options
 constexpr std::size_t OPTION_DESC_GAP = 2;
 
 String
