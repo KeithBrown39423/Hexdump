@@ -2,7 +2,7 @@
 name: Feature Suggestion
 about: Suggest an idea for this project
 title: "[Feature] <TITLE HERE>"
-labels: enhancement
+labels: bug, enhancement
 assignees: KeithBrown39423
 
 ---
