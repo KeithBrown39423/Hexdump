@@ -1,3 +1,6 @@
 bin/
 .vscode
-Banner.xcf
+*.log
+*.sh
+.gitignore
+optimize_test.py
