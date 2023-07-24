@@ -25,7 +25,7 @@ pyfile_dir = path.dirname(__file__)
 
 # get some basic info on hexdump
 hexdump_ver = 'UNKNOWN' 
-with open("src/hexdump.cpp", "r") as f:
+with open("random.bin", "r") as f:
     for line in f:
         if "hexdump_version" in line:
             ver_start = line.find('"') + 1
