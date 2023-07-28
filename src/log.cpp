@@ -11,7 +11,7 @@ std::ofstream out_stream;
 bool output_logs = true;
 
 #ifdef _WIN32
-string home_directory = string(std::getenv("HOMEDRIVE"))) + string(std::getenv("HOMEPATH"));
+string home_directory = string(std::getenv("HOMEDRIVE")) + string(std::getenv("HOMEPATH"));
 #else
 string home_directory = string(std::getenv("HOME"));
 #endif
@@ -38,7 +38,11 @@ void initialize_log() {
     // If the user's home directory is not set, or they are runing
     // as administrator, use the Program Files directory instead.
     if (home_directory == "") {
-        fs::path location = fs::path(std::getenv("HOMEDRIVE") || "C:")
+        string home_drive = std::getenv("HOMEDRIVE");
+        if (home_drive == "") {
+            home_drive = "C:";
+        }
+        fs::path location = fs::path(home_drive)
                                 .append("Program Files")
                                 .append("Hexdump");
         if (!fs::exists(location)) {
