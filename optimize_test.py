@@ -160,7 +160,7 @@ PYFILE_NAME = path.basename(__file__)
 PYFILE_DIR = path.dirname(__file__)
 
 BASE_COMPILE_COMMAND = ["g++", "-Wall", "-Werror", "-Wpedantic", "-I",
-                        "lib", "-I", "include", "src/hexdump.cpp", "-o"]
+                        "lib", "-I", "include", "src/log.cpp", "src/hexdump.cpp", "-o"]
 OPTIMIZATION_LEVELS  = ["0", "1", "2", "3", "s", "fast", "g"]
 TEST_ARGS            = ["--ascii", args.file]
 
@@ -241,7 +241,7 @@ class TestHandler:
                     t1, t2 = future.result()
                     log(INFO, f"Compiled binary... took {t2 - t1} seconds")
                 except Exception as exc:
-                    log(ERORR, f"An error occurred while compiling a binary: {exc}")
+                    log(ERROR, f"An error occurred while compiling a binary: {exc}")
         end = time()
         log(VERBOSE, "Final time taken:", end-start)
 
@@ -271,7 +271,7 @@ class TestHandler:
         log(VERBOSE, f"run_command = {run_command}")
         start = time()
         log(VERBOSE, "running run_command")
-        sp.call(run_command, stdout=sp.DEVNULL, stderr=sp.STDOUT)
+        sp.call(run_command, stderr=sp.STDOUT)
         log(VERBOSE, "run_command executed")
         end = time()
     

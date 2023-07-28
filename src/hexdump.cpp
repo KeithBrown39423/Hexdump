@@ -1,117 +1,120 @@
-#include <hexdump_errno.h>
-
-#include <ctime>
-#include <cxxopts.hpp>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <iterator>
-#include <string>
-#include <vector>
-
-// Check windows
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
-using namespace cxxopts;
+#include <hexdump.h>
+#include <log.h>
 
-using std::string;
-namespace fs = std::filesystem;
+#include <cstdio>
+#include <chrono>
 
-const string hexdump_version = "v1.1.0";
-const size_t max_file_size = 0xFFFFFFFF;
-const size_t max_log_count = 128;
-
-string binary_name;
-
+const string hexdump_version = "2.0.0";
 string error_header = "\x1b[1;38;2;255;0;0mError: \x1b[0m";
+string binary_name = "";
+
+filedata_t filedata;
+
+const unsigned int max_file_size = 0xFFFFFFFF;
+const unsigned int large_file_size = 0x2000000;
 
 string ansi_reset = "\x1b[0m";
 string offset_color = "\x1b[38;2;0;144;255m";
 string ascii_color = "\x1b[38;2;0;144;48m";
 
-enum log_level {
-    LOG_INFO,
-    LOG_WARN,
-    LOG_ERROR
-};
-
-const string enum_vals[] = {
-    "INFO",
-    "WARN",
-    "ERROR"
-};
+bool output_color = true;
 
 ParseResult initialize_options(int argc, char** argv);
-string int_to_hex(int value, int width);
-void outputHexLine(std::ostream& output, std::vector<unsigned char> buffer, size_t offset, size_t size, int ascii);
-void log(string message, log_level level = LOG_INFO, bool output = false);
+void output_hex_line(std::ostream& output, std::ifstream& input_stream, unsigned int offset, unsigned int size, int ascii);
+void output_hexdump(std::ostream& output_stream, std::ifstream& input_stream, int ascii);
 
 int main(int argc, char** argv) {
-    ParseResult result = initialize_options(argc, argv);
-    const string filename = result["file"].as<string>();
+    auto program_start = std::chrono::high_resolution_clock::now();
+    binary_name = fs::path(argv[0]).filename().string();
+    initialize_log();
 
-    if (!fs::exists(filename)) {
-        std::cerr << error_header << "File '" + filename + "' does not exist";
-        return HEX_ENOENT;
+    ParseResult result = initialize_options(argc, argv);
+
+    filedata.filename = result["file"].as<string>();
+
+    if (!fs::exists(filedata.filename)) {
+        std::cerr << error_header << "File '" + filedata.filename + "' does not exist";
+        log("File '" + filedata.filename + "' does not exist", LOG_ERROR);
+        exit_hexdump(HEX_ENOENT);
     }
 
-    std::ifstream input_stream(filename, std::ios::binary | std::ios::in);
+    std::ifstream input_stream(filedata.filename, std::ios::binary | std::ios::in);
 
     if (!input_stream.is_open()) {
-        std::cerr << error_header << "Failed to open file '" << filename << "'" << std::endl;
-        return HEX_EIO;
+        std::cerr << error_header << "Failed to open file '" << filedata.filename << "'" << std::endl;
+        log("Failed to open file '" + filedata.filename + "'", LOG_ERROR);
+        exit_hexdump(HEX_EIO);
     }
 
     input_stream.seekg(0, input_stream.end);
-    const size_t file_size = input_stream.tellg();
+    filedata.size = input_stream.tellg();
     input_stream.seekg(0, input_stream.beg);
 
-    if (file_size > max_file_size) {
+    if (filedata.size > max_file_size) {
         std::cerr << error_header << "File size is too large" << std::endl;
-        return HEX_EFBIG;
-    } else if (file_size == 0) {
+        log("File size is too large", LOG_ERROR);
+        exit_hexdump(HEX_EFBIG);
+    } else if (filedata.size == 0) {
         std::cerr << error_header << "File is empty" << std::endl;
-        return HEX_EFEMPTY;
+        log("File is empty", LOG_WARN);
+        exit_hexdump(HEX_EFEMPTY);
     }
 
-    std::vector<unsigned char> buffer;
-    unsigned char byte;
-    while (input_stream >> std::noskipws >> byte) {
-        buffer.push_back(byte);
-    }
+    filedata.absolute_path = fs::absolute(filedata.filename).string();
 
-    std::stringstream output = std::stringstream();
+    append_execution_info(result);
 
-    output << offset_color
-           << "  Offset: 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F  ";
-    if (result.count("ascii")) {
-        output << "0123456789ABCDEF";
-    }
-    output << ansi_reset << "\n";
-
-    for (size_t i = 0; i < file_size; i += 16) {
-        outputHexLine(output, buffer, i, file_size, result.count("ascii"));
+    if (filedata.size > large_file_size) {
+        log("File size is large. Execution might take a long time", LOG_WARN);
     }
 
     if (result.count("output")) {
+        if (!output_color) {
+            log("Disabling color output for file output", LOG_INFO);
+        }
         const string output_filename = result["output"].as<string>();
         std::ofstream output_stream;
         output_stream.open(output_filename, std::ios::out);
-        output_stream << output.str() << std::endl;
+        auto hexdump_start = std::chrono::high_resolution_clock::now();
+        output_hexdump(output_stream, input_stream, result.count("ascii"));
+        auto hexdump_end = std::chrono::high_resolution_clock::now();
+        auto hexdump_duration = std::chrono::duration_cast<std::chrono::milliseconds>(hexdump_end - hexdump_start).count();
+        std::stringstream hexdump_duration_ss;
+        hexdump_duration_ss << std::fixed << std::setprecision(3) << hexdump_duration / 1000.0;
+        log("Hexdump duration: " + hexdump_duration_ss.str() + " seconds", LOG_INFO);
         output_stream.close();
         std::cout << "Wrote output to " << output_filename << std::endl;
+        log("Wrote output to " + output_filename, LOG_INFO);
     } else {
-        std::cout << output.str() << std::endl;
+        auto hexdump_start = std::chrono::high_resolution_clock::now();
+        output_hexdump(std::cout, input_stream, result.count("ascii"));
+        auto hexdump_end = std::chrono::high_resolution_clock::now();
+        auto hexdump_duration = std::chrono::duration_cast<std::chrono::milliseconds>(hexdump_end - hexdump_start).count();
+        std::stringstream hexdump_duration_ss;
+        hexdump_duration_ss << std::fixed << std::setprecision(3) << hexdump_duration / 1000.0;
+        log("Hexdump duration: " + hexdump_duration_ss.str() + " seconds", LOG_INFO);
     }
+
+    auto program_end = std::chrono::high_resolution_clock::now();
+
+    auto program_duration = std::chrono::duration_cast<std::chrono::milliseconds>(program_end - program_start).count();
+
+    std::stringstream program_duration_ss;
+    program_duration_ss << std::fixed << std::setprecision(3) << program_duration / 1000.0;
+
+    log("Program duration: " + program_duration_ss.str() + " seconds", LOG_INFO);
+    log("Exiting with code 0", LOG_INFO);
+
+    exit_hexdump(HEX_RETURN);
 
     return 0;
 }
 
 ParseResult initialize_options(int argc, char** argv) {
-    binary_name = fs::path(argv[0]).filename().string();
-
     Options options(binary_name, "A simple hexdump utility\n");
 
     options.custom_help("[options...]")
@@ -130,16 +133,26 @@ ParseResult initialize_options(int argc, char** argv) {
 
     options.parse_positional({"file"});
 
-    ParseResult result = options.parse(argc, argv);
+    ParseResult result;
+    try {
+        result = options.parse(argc, argv);
+    } catch (std::exception& e) {
+        string message = e.what();
+        std::cerr << error_header << message << std::endl;
+        log("Exception: ", LOG_ERROR, message);
+        exit_hexdump(HEX_EINVAL);
+    }
 
     if (result.count("help")) {
         std::cout << options.help() << std::endl;
-        exit(EXIT_SUCCESS);
+        log("Called with --help", LOG_INFO);
+        exit_hexdump(HEX_OK);
     }
 
     if (result.count("version")) {
         std::cout << "Hexdump " << hexdump_version << std::endl;
-        exit(EXIT_SUCCESS);
+        log("Called with --version", LOG_INFO);
+        exit_hexdump(HEX_OK);
     }
     if ((result.count("output-color") &&
          result["output-color"].as<string>() == "false") ||
@@ -149,6 +162,7 @@ ParseResult initialize_options(int argc, char** argv) {
         offset_color = "";
         ascii_color = "";
         error_header = "Error: ";
+        output_color = false;
     }
 #ifdef _WIN32
     else {
@@ -167,6 +181,7 @@ ParseResult initialize_options(int argc, char** argv) {
             offset_color = "";
             ascii_color = "";
             error_header = "Error: ";
+            output_color = false;
         }
     }
 #endif
@@ -175,99 +190,70 @@ ParseResult initialize_options(int argc, char** argv) {
         std::cerr << error_header << "Missing required argument: file\nUsage: "
                   << binary_name << " [options...] <file>\nTry `" << binary_name
                   << " --help` for more information." << std::endl;
-
-        exit(HEX_EMISARG);
+        log("Missing required argument: file", LOG_ERROR);
+        exit_hexdump(HEX_EMISARG);
     }
 
     return result;
 }
 
-string int_to_hex(int value, int width) {
-    std::stringstream stream = std::stringstream();
-    stream << std::hex << std::uppercase << std::setfill('0') << std::setw(width) << value;
-    return stream.str();
-}
-
-void outputHexLine(std::ostream& output, std::vector<unsigned char> buffer, size_t offset, size_t size, int ascii) {
+void output_hex_line(std::ostream& output, std::ifstream& input_stream, unsigned int offset, unsigned int size, int ascii) {
     const int bytes_per_line = 16;
-    output << offset_color << int_to_hex(offset, 8) << ": " << ansi_reset;
-    for (size_t i = 0; i < bytes_per_line; i++) {
+    std::vector<unsigned char> buffer(bytes_per_line);
+    unsigned char byte;
+    input_stream.seekg(offset);
+    for (int i = 0; i < bytes_per_line; i++) {
+        if (input_stream.peek() != EOF) {
+            input_stream >> std::noskipws >> byte;
+            buffer[i] = byte;
+        }
+    }
+    char offset_str[9];
+    sprintf(offset_str, "%08X", offset);
+    output << offset_color << offset_str << ": " << ansi_reset;
+    
+    char byte_str[3];
+    for (unsigned int i = 0; i < bytes_per_line; i++) {
+        if (offset + i == (unsigned int)(size * .25)) {
+            log("25% complete", LOG_INFO);
+        } else if (offset + i == (unsigned int)(size * .50)) {
+            log("50% complete", LOG_INFO);
+        } else if (offset + i == (unsigned int)(size * .75)) {
+            log("75% complete", LOG_INFO);
+        }
         if (offset + i < size) {
-            output << int_to_hex(buffer[offset + i], 2) << " ";
+            sprintf(byte_str, "%02X", buffer[i]);
+            output << byte_str << " ";
         } else {
             output << "   ";
         }
     }
     output << " ";
-    if (!ascii) {
-        output << ansi_reset << "\n";
-        return;
-    }
-    for (size_t i = 0; i < bytes_per_line; i++) {
-        output << ascii_color;
+    if (!ascii) return;
+    output << ascii_color;
+    for (unsigned int i = 0; i < bytes_per_line; i++) {
         if (offset + i > size - 1) {
             output << " ";
             continue;
         };
-        if (buffer[offset + i] <= 32 || buffer[offset + i] >= 126) {
+        if (buffer[i] <= 32 || buffer[i] >= 126) {
             output << ".";
             continue;
         }
-        output << buffer[offset + i];
+        output << buffer[i];
     }
-    output << ansi_reset << "\n";
+    output << "\n";
 }
 
-string timestamp() {
-    time_t timer;
-    char buffer[26];
-    struct tm* tm_info;
-
-    timer = time(NULL);
-    tm_info = localtime(&timer);
-
-    strftime(buffer, 26, "%Y-%m-%d, %H:%M:%S", tm_info);
-
-    return string(buffer);
-}
-
-void log(string message, log_level level, bool output) {
-    string home_directory;
-#ifdef _WIN32
-    home_directory = string(std::getenv("HOMEDRIVE")) + string(std::getenv("HOMEPATH"));
-#else
-    home_directory = std::getenv("HOME");
-#endif
-    fs::path log_path = fs::path(home_directory)
-                            .append("." + binary_name);
-
-    if (!fs::exists(log_path)) {
-        fs::create_directory(log_path);
+void output_hexdump(std::ostream& output_stream, std::ifstream& input_stream, int ascii) {
+    output_stream << offset_color
+           << "  Offset: 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F  ";
+    if (ascii) {
+        output_stream << "0123456789ABCDEF";
     }
-
-    log_path = log_path.append("logs");
-
-    if (!fs::exists(log_path)) {
-        fs::create_directory(log_path);
+    output_stream << "\n";
+    for (unsigned int i = 0; i < filedata.size; i += 16) {
+        output_hex_line(output_stream, input_stream, i, filedata.size, ascii);
     }
-
-    if (!fs::is_directory(log_path)) {
-        // TODO: Implement failsafe if log_path cannot be created
-    }
-
-    fs::path log = log_path.append(binary_name + ".log");
-
-    string log_message = "[" + timestamp() + "] [" + enum_vals[level] + "]: " + message;
-
-    std::ofstream log_stream = std::ofstream(log, std::ios::out | std::ios::app);
-    log_stream << log_message << std::endl;
-    log_stream.close();
-
-    if (output) {
-        if (level == LOG_ERROR) {
-            std::cerr << error_header << message << std::endl;
-        } else {
-            std::cout << message << std::endl;
-        }
-    }
+    output_stream << ansi_reset;
 }

@@ -6,7 +6,7 @@ BINNAME := hexdump
 TESTDIR := test
 
 SRCEXT := cpp
-SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
+SOURCES := $(wildcard $(SRCDIR)/*.$(SRCEXT))
 CXXFLAGS := -Wall -Werror -Wpedantic
 OPTFLAGS := -O3
 INC := -I lib -I include
