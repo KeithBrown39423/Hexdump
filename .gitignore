@@ -1,5 +1,5 @@
 bin/
 testing/
 *.log
-*.sh
+*.*sh
 .vscode
