@@ -1,5 +1,6 @@
 bin/
 testing/
 *.log
-*.*sh
+*.fish
+*.py
 .vscode
