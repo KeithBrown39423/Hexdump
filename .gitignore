@@ -1,6 +1,5 @@
 bin/
-.vscode
+testing/
 *.log
 *.sh
-.gitignore
-optimize_test.py
+.vscode
