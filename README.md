@@ -33,7 +33,7 @@
 <br /><br />
 <div align="center">
   
-  ###### Hexdump v1.1.0
+  ###### Hexdump v1.2.0
   
   <img src="./assets/screenshot.png" alt="Screenshot" />
 </div>
