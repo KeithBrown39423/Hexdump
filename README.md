@@ -55,8 +55,8 @@
 Download the binary from the [release](https://github.com/KeithBrown39423/Hexdump/releases/) page. 
 
 Place the Hexdump binary into: 
-* `/bin/etc` ~ For system-wide access (requires administrator privileges)
-* `~/bin` ~ For local access restricted to your user account (create the folder if it doesn't exist)
+* `/bin/` ~ For system-wide access (requires administrator privileges)
+* `~/.local/bin/` ~ For local access restricted to your user account (create the folder if it doesn't exist)
 
 <br /><br />
 

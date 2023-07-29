@@ -8,7 +8,7 @@
 #include <cstdio>
 #include <chrono>
 
-const string hexdump_version = "2.0.0";
+const string hexdump_version = "1.2.0";
 string error_header = "\x1b[1;38;2;255;0;0mError: \x1b[0m";
 string binary_name = "";
 
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
 }
 
 ParseResult initialize_options(int argc, char** argv) {
-    Options options(binary_name, "A simple hexdump utility\n");
+    Options options(binary_name, "An alternative cross platfrom hex dumping utility\n");
 
     options.custom_help("[options...]")
         .positional_help("<file>")
@@ -211,7 +211,7 @@ void output_hex_line(std::ostream& output, std::ifstream& input_stream, unsigned
     char offset_str[9];
     sprintf(offset_str, "%08X", offset);
     output << offset_color << offset_str << ": " << ansi_reset;
-    
+
     char byte_str[3];
     for (unsigned int i = 0; i < bytes_per_line; i++) {
         if (offset + i == (unsigned int)(size * .25)) {
@@ -228,7 +228,7 @@ void output_hex_line(std::ostream& output, std::ifstream& input_stream, unsigned
             output << "   ";
         }
     }
-    output << " ";
+    output << "   ";
     if (!ascii) return;
     output << ascii_color;
     for (unsigned int i = 0; i < bytes_per_line; i++) {
@@ -247,9 +247,9 @@ void output_hex_line(std::ostream& output, std::ifstream& input_stream, unsigned
 
 void output_hexdump(std::ostream& output_stream, std::ifstream& input_stream, int ascii) {
     output_stream << offset_color
-           << "  Offset: 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F  ";
+           << "  Offset: 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F";
     if (ascii) {
-        output_stream << "0123456789ABCDEF";
+        output_stream << "    0123456789ABCDEF";
     }
     output_stream << "\n";
     for (unsigned int i = 0; i < filedata.size; i += 16) {
