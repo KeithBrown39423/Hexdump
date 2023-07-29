@@ -229,7 +229,10 @@ void output_hex_line(std::ostream& output, std::ifstream& input_stream, unsigned
         }
     }
     output << "   ";
-    if (!ascii) return;
+    if (!ascii) {
+        output << "\n";
+        return;
+    };
     output << ascii_color;
     for (unsigned int i = 0; i < bytes_per_line; i++) {
         if (offset + i > size - 1) {
