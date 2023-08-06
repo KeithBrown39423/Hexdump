@@ -15,6 +15,7 @@
 
 using std::string;
 
+using namespace std::chrono;
 using namespace cxxopts;
 
 namespace fs = std::filesystem;
@@ -35,6 +36,8 @@ extern string binary_name;
 
 extern bool output_color;
 
+extern ParseResult options;
+
 enum log_level {
     LOG_INFO,
     LOG_WARN,
@@ -46,5 +49,15 @@ const string enum_vals[] = {
     "WARN",
     "ERROR"
 };
+
+const unsigned int max_file_size = 0xFFFFFFFF;
+const unsigned int large_file_size = 0x2000000;
+extern string ansi_reset;
+extern string offset_color;
+extern string ascii_color;
+extern bool output_color;
+extern std::map<string, bool> progress_logged;
+const int progress_log_points[] = { 25, 50, 75 };
+extern unsigned int offset;
 
 #endif // _HEXDUMP_H

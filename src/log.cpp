@@ -123,7 +123,7 @@ void initialize_log() {
     out_stream = std::ofstream(log_path, std::ios::out | std::ios::app);
 }
 
-void append_execution_info(ParseResult options) {
+void append_execution_info() {
     if (!output_logs) return;
 
     out_stream << "HEXDUMP V" << hexdump_version << "\n\n"

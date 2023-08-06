@@ -7,11 +7,11 @@ TESTDIR := test
 
 SRCEXT := cpp
 SOURCES := $(wildcard $(SRCDIR)/*.$(SRCEXT))
-CXXFLAGS := -Wall -Werror -Wpedantic
+CXXFLAGS := -Wall -Werror -Wpedantic -std=c++17
 OPTFLAGS := -O3
 INC := -I lib -I include
 
-COMPILECMD := $(CXX) $(CXXFLAGS) $(DEBUG) $(OPTFLAGS) $(INC) $(SOURCES) -o
+COMPILECMD := $(CXX) $(CXXFLAGS) $(OPTFLAGS) $(INC) $(SOURCES) -o
 
 build:
 	mkdir -p $(BINDIR)

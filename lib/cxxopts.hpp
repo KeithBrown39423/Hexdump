@@ -2665,7 +2665,8 @@ Options::help_one_group(const std::string& g) const
 
   if (!g.empty())
   {
-    result += toLocalString(" " + g + " options:\n");
+    // result += toLocalString(" " + g + " options:\n");
+    result += toLocalString(" " + g + ":\n"); // Adapted from original to remove "options" from group header
   }
 
   for (const auto& o : group->second.options)
