@@ -28,6 +28,17 @@
 
 <br />
 
+----
+
+<blockquote>
+  <h1>Note</h1>
+
+  **Hexdump** *is designed to replace the standard Hexdump command*.
+  If you feel uncomfortable replacing it, simply rename the binary to something else.
+</blockquote>
+
+<br />
+
 <!-- ----
 
 <br /><br />
@@ -44,19 +55,12 @@
 * Output to file
 
 ## Build
-<blockquote>
-  <h1>Note</h1>
-
-  **Hexdump** *is designed to replace the standard Hexdump command*.
-  If you feel uncomfortable replacing it, simply rename the binary to something else.
-</blockquote>
-
 Instructions will be added soon!
 
 <br /><br />
 
 
-<div id="credits" align="center">
+<div id="user-content-toc" align="center">
   <ul>
     <summary><h1 style="display: inline-block;">CREDITS</h1></summary>
   </ul>
