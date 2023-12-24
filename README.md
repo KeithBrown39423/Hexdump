@@ -33,8 +33,9 @@
 <blockquote>
   <h1>Note</h1>
 
-  **Hexdump** *is designed to replace the standard Hexdump command*.
-  If you feel uncomfortable replacing it, simply rename the binary to something else.
+  <b>Hexdump</b> is crafted as a <ins>replacement</ins> for the standard Hexdump command.
+  
+  <i>If you're hesitant about replacing it</i>, feel free to rename the binary to a different name.
 </blockquote>
 
 <br />
@@ -60,6 +61,7 @@ Instructions will be added soon!
 <br /><br />
 
 
+<a name="credits"></a>
 <div id="user-content-toc" align="center">
   <ul>
     <summary><h1 style="display: inline-block;">CREDITS</h1></summary>
