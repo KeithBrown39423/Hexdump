@@ -30,13 +30,9 @@
 
 ----
 
-<blockquote>
-  <h1>Note</h1>
-
-  <b>Hexdump</b> is crafted as a <ins>replacement</ins> for the standard Hexdump command.
-  
-  <i>If you're hesitant about replacing it</i>, feel free to rename the binary to a different name.
-</blockquote>
+> [!NOTE]
+**Hexdump** *is designed to replace the standard Hexdump command*.
+If you feel uncomfortable replacing it, simply rename the binary to something else.
 
 <br />
 
