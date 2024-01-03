@@ -15,7 +15,7 @@
     <i>the <b>alternative</b></i> cross platfrom hex dumping utility
     <br />
     <a href="#features">Features</a> ·
-    <a href="#setup"><b>Build</b></a> ·
+    <a href="#build"><b>Build</b></a> ·
     <a href="#credits">Credits</a>
   </p>
 </div>
