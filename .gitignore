@@ -1,6 +1,3 @@
 bin/
-testing/
-*.log
-*.fish
-*.py
-.vscode
+zig-cache/
+Makefile
