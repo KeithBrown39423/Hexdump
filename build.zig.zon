@@ -1,0 +1,13 @@
+.{
+    .name = "Hexdump",
+    .version = "2.0.0",
+
+    .dependencies = .{
+        .clap = .{
+            .url = "https://github.com/Hejsil/zig-clap/archive/refs/tags/0.8.0.tar.gz",
+            .hash = "1220949d4e88864579067b6d4cdad6476c6176f27e782782c2c39b7f2c4817a10efb",
+        },
+    },
+
+    .paths = .{ "" },
+}

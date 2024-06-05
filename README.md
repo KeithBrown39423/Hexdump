@@ -67,7 +67,7 @@ Instructions will be added soon!
 ----
 
 ### Libraries
-* [**Zarg**](https://github.com/ZackeryRSmith/zarg/) ~ for parsing command line arguments
+* [**zig-clap**](https://github.com/Hejsil/zig-clap) ~ for parsing command line arguments
 
 
 ### Contributors
