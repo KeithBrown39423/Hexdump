@@ -1,3 +1,2 @@
-bin/
 zig-cache/
-Makefile
+zig-out/
