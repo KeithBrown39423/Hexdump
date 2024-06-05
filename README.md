@@ -29,30 +29,35 @@
 <br />
 
 ----
-
 > [!NOTE]
 **Hexdump** *is designed to replace the standard Hexdump command*.
 If you feel uncomfortable replacing it, simply rename the binary to something else.
 
+<div align="center">
+  <h2>Example Usage</h2>
+  <img src="assets/screenshot.png" alt="Screenshot of Hexdump">
+  <br />
+</div>
+
+
 <br />
 
-<!-- ----
-
-<br /><br />
-<div align="center">
-  
-  ###### Hexdump v2.0
-  
-  <img src="./assets/screenshot-v2.0.png" alt="Screenshot" />
-</div> -->
 
 ## Features
 * ASCII sidebar
+* Skipping bytes
+* Specified length
+* Multiple formats
 * Colored output
 * Output to file
 
 ## Build
-Instructions will be added soon!
+In order to build Hexdump, you need to have [**zig**](https://ziglang.org/) installed.
+After installing zig, you can simply run the following command:
+```sh
+zig build --prefix /opt/hexdump/
+```
+(You can replace `/opt/hexdump` with wherever you want to install Hexdump)
 
 <br /><br />
 
