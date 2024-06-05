@@ -9,10 +9,26 @@ const args_struct = struct {
     disable_color: ?u8,
     force_color: ?u8,
     squeeze: ?u8,
+    one_byte_char: ?u8,
+    one_byte_decimal: ?u8,
+    one_byte_octal: ?u8,
+    two_byte_decimal: ?u8,
+    two_byte_octal: ?u8,
+    two_byte_hex: ?u8,
 };
 
 pub fn main() !void {
-    _ = parse_args();
+    var args = parse_args();
+    const stdout = std.io.getStdOut();
+    if (!stdout.isTty()) {
+        args.disable_color = 1;
+    }
+
+    if (args.force_color != 0) {
+        args.disable_color = 0;
+    }
+
+    std.debug.print("Args: {?any}\n", .{args.disable_color});
     return;
 }
 
@@ -36,6 +52,12 @@ fn parse_args() args_struct {
         \\    --disable_color     Disables color output. The flag is also set if stdout is piped
         \\    --force_color       Forces colored output, even if stdout is piped. This takes priority over --disable-color
         \\    --squeeze           Show identical lines as *
+        \\    --one_byte_char     Display as ASCII character, escape code string ('\n', '\t', etc.), or as DEC
+        \\    --one_byte_decimal  Display as decimal digit
+        \\    --one_byte_octal    Display as octal digit
+        \\    --two_byte_decimal  Display as decimal digit (two bytes)
+        \\    --two_byte_octal    Display as octal digit (two bytes)
+        \\    --two_byte_hex      Display as hexadecimal digit (two bytes)
     );
 
     const parsers = comptime .{
@@ -61,10 +83,8 @@ fn parse_args() args_struct {
             \\Hexdump v2.0.0 ~ The alternative cross-platform hexdump utility
             \\
             \\Usage:
-            \\  hexdump 
+            \\    hexdump [options...] <file>
         ) catch |err| help_error(err);
-
-        clap.usage(std.io.getStdErr().writer(), clap.Help, &params) catch |err| help_error(err);
 
         _ = helpWriter.write(
             \\
@@ -78,6 +98,15 @@ fn parse_args() args_struct {
             .spacing_between_parameters = 0
         }) catch |err| help_error(err);
 
+        _ = helpWriter.write(
+            \\
+            \\ Arguments:
+            \\   <length> and <offset> arguments can be followed by xxx suffixes.
+            \\     Lowercase suffixes (k, m, g, ...) indicate a base of 1000, while
+            \\     uppercase suffixes (K, M, G, ...) represent a base of 1024.
+            \\
+        ) catch |err| help_error(err);
+
         std.process.exit(0);
         return .{};
     }
@@ -90,6 +119,11 @@ fn parse_args() args_struct {
         std.process.exit(0);
     }
 
+    if (res.positionals.len != 1) {
+        std.log.err("Expected exactly one positional argument, got {d}", .{res.positionals.len});
+        std.process.exit(1);
+    }
+
     return .{
         .file = res.positionals[0],
         .ascii = res.args.ascii,
@@ -98,6 +132,12 @@ fn parse_args() args_struct {
         .disable_color = res.args.disable_color,
         .force_color = res.args.force_color,
         .squeeze = res.args.squeeze,
+        .one_byte_char = res.args.one_byte_char,
+        .one_byte_decimal = res.args.one_byte_decimal,
+        .one_byte_octal = res.args.one_byte_octal,
+        .two_byte_decimal = res.args.two_byte_decimal,
+        .two_byte_octal = res.args.two_byte_octal,
+        .two_byte_hex = res.args.two_byte_hex,
     };
 }
 
