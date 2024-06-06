@@ -201,10 +201,12 @@ pub fn main() !void {
         }
 
         if (args.ascii != 0) {
-            _ = stdout.write("\x1b[32m") catch |err| {
-                std.log.err("Failed to write color escape sequence: {!}", .{err});
-                std.process.exit(1);
-            };
+            if (color) {
+                _ = stdout.write("\x1b[32m") catch |err| {
+                    std.log.err("Failed to write color escape sequence: {!}", .{err});
+                    std.process.exit(1);
+                };
+            }
 
             for (bytes_length..16) |_| {
                 stdout.writeByteNTimes(' ', opts.width + 1) catch |err| {
