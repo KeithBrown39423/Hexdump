@@ -38,14 +38,12 @@ pub fn main() !void {
     }
     const a = gpa.allocator();
 
-    const args = parse_args(a);
+    var args = parse_args(a);
     const stdout_handle = std.io.getStdOut();
     var stdout_buffer = std.io.bufferedWriter(stdout_handle.writer());
     const stdout = stdout_buffer.writer();
-
-    var stdout_config = std.io.tty.detectConfig(stdout_handle);
-    if (args.disable_color != 0) stdout_config = .no_color;
-    if (args.force_color != 0) stdout_config = .escape_codes;
+    if (!stdout_handle.isTty()) args.disable_color = 1;
+    if (args.force_color != 0) args.disable_color = 0;
 
     const file = fs.cwd().openFile(args.file, .{}) catch |err| {
         std.log.err("Failed to open file: {!}", .{err});
@@ -83,10 +81,14 @@ pub fn main() !void {
         Formats.TWO_BYTE_OCTAL => .{ .width = 6, .base = 8 },
     };
 
-    stdout_config.setColor(stdout, .blue) catch |err| {
-        std.log.err("Failed to write color escape sequence: {!}", .{err});
-        std.process.exit(1);
-    };
+    const color = args.disable_color == 0;
+
+    if (color) {
+        _ = stdout.write("\x1b[34m") catch |err| {
+            std.log.err("Failed to write color escape sequence: {!}", .{err});
+            std.process.exit(1);
+        };
+    }
 
     _ = stdout.write("  Offset: ") catch |err| {
         std.log.err("Failed to write offset header: {!}", .{err});
@@ -112,10 +114,12 @@ pub fn main() !void {
         };
     }
 
-    stdout_config.setColor(stdout, .reset) catch |err| {
-        std.log.err("Failed to write color escape sequence: {!}", .{err});
-        std.process.exit(1);
-    };
+    if (color) {
+        _ = stdout.write("\x1b[0m") catch |err| {
+            std.log.err("Failed to write color escape sequence: {!}", .{err});
+            std.process.exit(1);
+        };
+    }
 
     var length = args.length orelse (filesize - offset);
 
@@ -130,10 +134,12 @@ pub fn main() !void {
     };
 
     for (0..lines) |line_index| {
-        stdout_config.setColor(stdout, .blue) catch |err| {
-            std.log.err("Failed to write color escape sequence: {!}", .{err});
-            std.process.exit(1);
-        };
+        if (color) {
+            _ = stdout.write("\x1b[34m") catch |err| {
+                std.log.err("Failed to write color escape sequence: {!}", .{err});
+                std.process.exit(1);
+            };
+        }
 
         std.fmt.formatInt(@divFloor(offset + (line_index * 16), 16) * 16, opts.base, .lower, .{ .fill = '0', .width = 8 }, stdout) catch |err| {
             std.log.err("Failed to write offset: {!}", .{err});
@@ -145,10 +151,12 @@ pub fn main() !void {
             std.process.exit(1);
         };
 
-        stdout_config.setColor(stdout, .reset) catch |err| {
-            std.log.err("Failed to write color escape sequence: {!}", .{err});
-            std.process.exit(1);
-        };
+        if (color) {
+            _ = stdout.write("\x1b[0m") catch |err| {
+                std.log.err("Failed to write color escape sequence: {!}", .{err});
+                std.process.exit(1);
+            };
+        }
 
         var bytes: [16]u8 = undefined;
         var bytes_length: u8 = 0;
@@ -176,16 +184,16 @@ pub fn main() !void {
             bytes_length += 1;
             length -= 1;
             // TODO: Check if the byte before this was 0 if it was and keep the same color.
-            if (byte == 0) {
-                stdout_config.setColor(stdout, .bright_black) catch |err| {
+            if (byte == 0 and color) {
+                _ = stdout.write("\x1b[90m") catch |err| {
                     std.log.err("Failed to write color escape sequence: {!}", .{err});
                     std.process.exit(1);
                 };
             }
             fmtByte(stdout, byte, opts.base, opts.width, args.format);
             // TODO: Check if the byte before this was 0 and don't clear the color.
-            if (byte == 0) {
-                stdout_config.setColor(stdout, .reset) catch |err| {
+            if (byte == 0 and color) {
+                _ = stdout.write("\x1b[0m") catch |err| {
                     std.log.err("Failed to write color escape sequence: {!}", .{err});
                     std.process.exit(1);
                 };
@@ -193,10 +201,12 @@ pub fn main() !void {
         }
 
         if (args.ascii != 0) {
-            stdout_config.setColor(stdout, .green) catch |err| {
-                std.log.err("Failed to write color escape sequence: {!}", .{err});
-                std.process.exit(1);
-            };
+            if (color) {
+                _ = stdout.write("\x1b[32m") catch |err| {
+                    std.log.err("Failed to write color escape sequence: {!}", .{err});
+                    std.process.exit(1);
+                };
+            }
 
             for (bytes_length..16) |_| {
                 stdout.writeByteNTimes(' ', opts.width + 1) catch |err| {
@@ -212,9 +222,10 @@ pub fn main() !void {
 
             for (0..bytes_length) |i| {
                 byte = bytes[i];
+
                 if (byte < 32 or byte > 126) {
-                    if (byte == 0x00) {
-                        stdout_config.setColor(stdout, .bright_black) catch |err| {
+                    if (byte == 0x00 and color) {
+                        _ = stdout.write("\x1b[90m") catch |err| {
                             std.log.err("Failed to write color escape sequence: {!}", .{err});
                             std.process.exit(1);
                         };
@@ -223,8 +234,8 @@ pub fn main() !void {
                         std.log.err("Failed to write ASCII byte: {!}", .{err});
                         std.process.exit(1);
                     };
-                    if (byte == 0x00) {
-                        stdout_config.setColor(stdout, .green) catch |err| {
+                    if (byte == 0x00 and color) {
+                        _ = stdout.write("\x1b[32m") catch |err| {
                             std.log.err("Failed to write color escape sequence: {!}", .{err});
                             std.process.exit(1);
                         };
