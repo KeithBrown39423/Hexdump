@@ -130,7 +130,7 @@ pub fn main() !void {
         std.process.exit(1);
     };
 
-    for (0..lines) |line_index| {
+    for (0..@intCast(lines)) |line_index| {
         stdout_config.setColor(stdout, .blue) catch |err| {
             std.log.err("Failed to write color escape sequence: {!}", .{err});
             std.process.exit(1);
@@ -155,7 +155,7 @@ pub fn main() !void {
         var bytes_length: u8 = 0;
         var byte: u8 = undefined;
 
-        for (0..(if (length < 16) length else 16)) |i| {
+        for (0..(if (length < 16) @intCast(length) else 16)) |i| {
             if (i == 8) {
                 _ = stdout.write(" ") catch |err| {
                     std.log.err("Failed to write byte separator: {!}", .{err});
