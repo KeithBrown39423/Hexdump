@@ -51,6 +51,7 @@ pub fn main() !void {
         std.log.err("Failed to open file: {!}", .{err});
         std.process.exit(1);
     };
+    a.free(args.file);
     defer file.close();
 
     var buffered_file_reader = std.io.bufferedReader(file.reader());
@@ -397,8 +398,14 @@ fn parse_args(allocator: std.mem.Allocator) args_struct {
         }
     }
 
+    const file_str = allocator.alloc(u8, res.positionals[0].len) catch |err| {
+        std.log.err("Failed to allocate memory: {!}", .{err});
+        std.process.exit(1);
+    };
+    @memcpy(file_str, res.positionals[0].ptr);
+
     return .{
-        .file = res.positionals[0],
+        .file = file_str,
         .ascii = res.args.ascii,
         .skip = skip,
         .length = length,
