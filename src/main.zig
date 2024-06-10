@@ -23,7 +23,7 @@ const args_struct = struct {
     length: ?u64,
     disable_color: ?u8,
     force_color: ?u8,
-    // TODO: v2.1.0 - squeeze: ?u8,
+    squeeze: ?u8,
     format: Formats,
 };
 
@@ -129,6 +129,7 @@ pub fn main() !void {
         std.log.err("Failed to write newline: {!}", .{err});
         std.process.exit(1);
     };
+    var previous_line: [16]u8 = undefined;
 
     for (0..@intCast(lines)) |line_index| {
         stdout_config.setColor(stdout, .blue) catch |err| {
@@ -151,45 +152,74 @@ pub fn main() !void {
             std.process.exit(1);
         };
 
+        var current_color: std.io.tty.Color = .reset;
+
         var bytes: [16]u8 = undefined;
         var bytes_length: u8 = 0;
         var byte: u8 = undefined;
 
-        for (0..(if (length < 16) @intCast(length) else 16)) |i| {
-            if (i == 8) {
-                _ = stdout.write(" ") catch |err| {
+        const bytes_in_line = @as(usize, @intCast(if (line_index * 16 >= filesize) 0 else if (length >= 16) 16 else length));
+
+        const bytes_read = fstream.readAll(&bytes) catch |err| {
+            std.log.err("Failed to read bytes: {!}", .{err});
+            std.process.exit(1);
+        };
+        if (bytes_read != bytes_in_line) {
+            std.log.err("Failed to read bytes: expected {d}, got {d}", .{ bytes_in_line, bytes_read });
+            std.process.exit(1);
+        }
+
+        if (std.mem.eql(u8, &bytes, &previous_line) and args.squeeze != 0) {
+            stdout_config.setColor(stdout, .yellow) catch |err| {
+                std.log.err("Failed to write color escape sequence: {!}", .{err});
+                std.process.exit(1);
+            };
+            _ = stdout.write(" *\n") catch |err| {
+                std.log.err("Failed to write squeezed line: {!}", .{err});
+                std.process.exit(1);
+            };
+            stdout_config.setColor(stdout, .reset) catch |err| {
+                std.log.err("Failed to write color escape sequence: {!}", .{err});
+                std.process.exit(1);
+            };
+            continue;
+        } else {
+            for (0..bytes_read) |i| {
+                if (i == 8) {
+                    _ = stdout.write(" ") catch |err| {
+                        std.log.err("Failed to write byte separator: {!}", .{err});
+                        std.process.exit(1);
+                    };
+                }
+
+                stdout.writeByte(' ') catch |err| {
                     std.log.err("Failed to write byte separator: {!}", .{err});
                     std.process.exit(1);
                 };
-            }
 
-            stdout.writeByte(' ') catch |err| {
-                std.log.err("Failed to write byte separator: {!}", .{err});
-                std.process.exit(1);
-            };
+                byte = bytes[i];
+                bytes[bytes_length] = byte;
+                bytes_length += 1;
+                length -= 1;
 
-            byte = fstream.readByte() catch |err| {
-                std.log.err("Failed to read byte: {!}", .{err});
-                std.process.exit(1);
-            };
+                if (byte == 0) {
+                    if (current_color != .bright_black) {
+                        current_color = .bright_black;
+                        stdout_config.setColor(stdout, .bright_black) catch |err| {
+                            std.log.err("Failed to write color escape sequence: {!}", .{err});
+                            std.process.exit(1);
+                        };
+                    }
+                } else if (current_color != .reset) {
+                    current_color = .reset;
+                    stdout_config.setColor(stdout, .reset) catch |err| {
+                        std.log.err("Failed to write color escape sequence: {!}", .{err});
+                        std.process.exit(1);
+                    };
+                }
+                fmtByte(stdout, byte, opts.base, opts.width, args.format);
 
-            bytes[bytes_length] = byte;
-            bytes_length += 1;
-            length -= 1;
-            // TODO: Check if the byte before this was 0 if it was and keep the same color.
-            if (byte == 0) {
-                stdout_config.setColor(stdout, .bright_black) catch |err| {
-                    std.log.err("Failed to write color escape sequence: {!}", .{err});
-                    std.process.exit(1);
-                };
-            }
-            fmtByte(stdout, byte, opts.base, opts.width, args.format);
-            // TODO: Check if the byte before this was 0 and don't clear the color.
-            if (byte == 0) {
-                stdout_config.setColor(stdout, .reset) catch |err| {
-                    std.log.err("Failed to write color escape sequence: {!}", .{err});
-                    std.process.exit(1);
-                };
+                previous_line[i] = byte;
             }
         }
 
@@ -269,7 +299,7 @@ fn parse_args(allocator: std.mem.Allocator) args_struct {
         \\-v, --version           Display the current version
         \\    --disable_color     Disables color output. The flag is also set if stdout is piped
         \\    --force_color       Forces colored output, even if stdout is piped. This takes priority over --disable-color
-        // TODO: v2.1.0 - \\    --squeeze           Show identical lines as *
+        \\    --squeeze           Show identical lines as *
         \\    --format <format>   Specify the output format
     );
 
@@ -417,7 +447,7 @@ fn parse_args(allocator: std.mem.Allocator) args_struct {
         .length = length,
         .disable_color = res.args.disable_color,
         .force_color = res.args.force_color,
-        // TODO: v2.1.0 - .squeeze = res.args.squeeze,
+        .squeeze = res.args.squeeze,
         .format = format,
     };
 }
