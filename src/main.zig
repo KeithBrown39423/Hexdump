@@ -199,7 +199,13 @@ pub fn main() !void {
                 std.process.exit(1);
             };
 
-            for (bytes_length..16) |_| {
+            for (bytes_length..16) |i| {
+                if (i == 8) {
+                    stdout.writeByte(' ') catch |err| {
+                        std.log.err("Failed to write space: {!}", .{err});
+                        std.process.exit(1);
+                    };
+                }
                 stdout.writeByteNTimes(' ', opts.width + 1) catch |err| {
                     std.log.err("Failed to write space: {!}", .{err});
                     std.process.exit(1);
