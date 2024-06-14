@@ -6,6 +6,11 @@
 
 ----
 
+----
+> [!WARNING]
+**Hexdump** currently is only support with Zig version 0.12.0. It will not build on any other version.
+This is a known issue and there is nothing that can be done at this time. Please do not create an issue for this.
+
 <div id="user-content-toc" align="center">
   <ul>
     <summary><h1 style="display: inline-block;">Hexdump</h1></summary>
