@@ -280,11 +280,23 @@ pub fn main() !void {
             std.process.exit(1);
         };
 
-        stdout_buffer.flush() catch |err| {
-            std.log.err("Failed to flush stdout: {!}", .{err});
-            std.process.exit(1);
-        };
+        if (line_index % 8 == 1) {
+            stdout_buffer.flush() catch |err| {
+                std.log.err("Failed to flush stdout: {!}", .{err});
+                std.process.exit(1);
+            };
+        }
     }
+
+    stdout_config.setColor(stdout, .reset) catch |err| {
+        std.log.err("Failed to write color escape sequence: {!}", .{err});
+        std.process.exit(1);
+    };
+
+    stdout_buffer.flush() catch |err| {
+        std.log.err("Failed to flush stdout: {!}", .{err});
+        std.process.exit(1);
+    };
 
     return;
 }
