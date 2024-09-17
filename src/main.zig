@@ -365,9 +365,6 @@ fn parse_args(allocator: std.mem.Allocator) args_struct {
             \\                                      * 1bchar: 1-byte character
             \\                                      * 1bdec: 1-byte decimal
             \\                                      * 1boct: 1-byte octal
-            \\                                      * 2bhex: 2-byte hexadecimal
-            \\                                      * 2bdec: 2-byte decimal
-            \\                                      * 2boct: 2-byte octal
             \\
             \\ Note:
             \\   <usize> parameters can be followed by xxx suffixes.
@@ -434,11 +431,11 @@ fn parse_args(allocator: std.mem.Allocator) args_struct {
             std.process.exit(1);
         } else if (std.mem.eql(u8, format_str, "2bdec")) {
             // TODO: v2.1.0 - format = Formats.TWO_BYTE_DECIMAL;
-            std.log.err("2-byte hexadecimal format is not supported yet. (Will be added in v2.1.0)", .{});
+            std.log.err("2-byte decimal format is not supported yet. (Will be added in v2.1.0)", .{});
             std.process.exit(1);
         } else if (std.mem.eql(u8, format_str, "2boct")) {
             // TODO: v2.1.0 - format = Formats.TWO_BYTE_OCTAL;
-            std.log.err("2-byte hexadecimal format is not supported yet. (Will be added in v2.1.0)", .{});
+            std.log.err("2-byte octal format is not supported yet. (Will be added in v2.1.0)", .{});
             std.process.exit(1);
         } else {
             std.log.err("Invalid format: {s}", .{format_str});
