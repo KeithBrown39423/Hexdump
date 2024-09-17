@@ -131,7 +131,12 @@ pub fn main() !void {
     };
     var previous_line: [16]u8 = undefined;
 
+    var bytes: [16]u8 = undefined;
+    var bytes_length: u8 = 0;
+    var byte: u8 = undefined;
+
     for (0..@intCast(lines)) |line_index| {
+        bytes_length = 0;
         stdout_config.setColor(stdout, .blue) catch |err| {
             std.log.err("Failed to write color escape sequence: {!}", .{err});
             std.process.exit(1);
@@ -154,20 +159,12 @@ pub fn main() !void {
 
         var current_color: std.io.tty.Color = .reset;
 
-        var bytes: [16]u8 = undefined;
-        var bytes_length: u8 = 0;
-        var byte: u8 = undefined;
-
         const bytes_in_line = @as(usize, @intCast(if (line_index * 16 >= filesize) 0 else if (length >= 16) 16 else length));
 
-        const bytes_read = fstream.readAll(&bytes) catch |err| {
+        _ = fstream.readAll(&bytes) catch |err| {
             std.log.err("Failed to read bytes: {!}", .{err});
             std.process.exit(1);
         };
-        if (bytes_read != bytes_in_line) {
-            std.log.err("Failed to read bytes: expected {d}, got {d}", .{ bytes_in_line, bytes_read });
-            std.process.exit(1);
-        }
 
         if (std.mem.eql(u8, &bytes, &previous_line) and args.squeeze != 0) {
             stdout_config.setColor(stdout, .yellow) catch |err| {
@@ -184,7 +181,7 @@ pub fn main() !void {
             };
             continue;
         } else {
-            for (0..bytes_read) |i| {
+            for (0..bytes_in_line) |i| {
                 if (i == 8) {
                     _ = stdout.write(" ") catch |err| {
                         std.log.err("Failed to write byte separator: {!}", .{err});
