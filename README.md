@@ -55,9 +55,9 @@ If you feel uncomfortable replacing it, simply rename the binary to something el
 In order to build Hexdump, you need to have [**zig**](https://ziglang.org/) installed.
 After installing zig, you can simply run the following command:
 ```sh
-zig build --prefix /opt/hexdump/ -Doptimize=ReleaseFast
+zig build -Doptimize=ReleaseFast
 ```
-(You can replace `/opt/hexdump` with wherever you want to install Hexdump)
+This will build Hexdump and place the binary in ./zig-out/bin/, after which you can move it to wherever you want to store the binary.
 
 <br /><br />
 
