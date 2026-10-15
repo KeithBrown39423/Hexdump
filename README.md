@@ -83,5 +83,5 @@ Huge thank you to all the people who have contributed to this project:
 </a>
 
 <p align="right">
-  <sub>(<b>Hexdump</b> is protected by the <a href="https://raw.githubusercontent.com/KeithBrown39423/Hexdump/release/LICENSE"><i>MIT</i></a> licence)</sub>
+  <sub>(<b>Hexdump</b> is protected by the <a href="LICENSE"><i>MIT</i></a> licence)</sub>
 </p>
